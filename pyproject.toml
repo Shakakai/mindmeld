@@ -7,7 +7,6 @@ authors = [
 ]
 dependencies = [
     "pydantic>=2.9.2",
-    "pytest>=8.3.3",
     "instructor>=1.5.0",
     "numpy>=2.1.1",
     "sentence-transformers>=3.1.1",
@@ -23,6 +22,11 @@ build-backend = "pdm.backend"
 
 [tool.pdm]
 distribution = true
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pytest>=8.3.3",
+]
 
 [tool.pytest.ini_options]
 testpaths = [
