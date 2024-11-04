@@ -23,7 +23,8 @@ answer_relevance_inference = Inference(
     Make reasonable assumptions about any context that is missing.
     """,
     input_type=AnswerRelevanceInput,
-    output_type=AnswerRelevanceOutput
+    output_type=AnswerRelevanceOutput,
+    temperature=0.0
 )
 
 

@@ -20,7 +20,8 @@ statement_verification_inference = Inference(
     Provide a boolean result and explain your reasoning.
     """,
     input_type=StatementVerificationInput,
-    output_type=StatementVerificationOutput
+    output_type=StatementVerificationOutput,
+    temparature=0.0
 )
 
 
@@ -37,7 +38,8 @@ statement_extraction_inference = Inference(
     Otherwise, return the list of extracted statements.
     """,
     input_type=BaseModel,
-    output_type=StatementExtractionOutput
+    output_type=StatementExtractionOutput,
+    temperature=0.0
 )
 
 

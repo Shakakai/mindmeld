@@ -1,5 +1,5 @@
 [project]
-name = "mindmeld"
+name = "llm_mindmeld"
 description = "A framework to glue all your AI tools together"
 authors = [
     {name = "Todd Cullen", email = "todd@100-x.ai"},
@@ -9,6 +9,8 @@ dependencies = [
     "instructor>=1.5.0",
     "numpy>=2.1.1",
     "sentence-transformers>=3.1.1",
+    "litellm>=1.51.3",
+    "pytest>=8.3.3",
 ]
 requires-python = ">=3.11"
 readme = "README.md"
@@ -34,6 +36,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
+pythonpath = ["src"]
 testpaths = [
     "tests",
 ]

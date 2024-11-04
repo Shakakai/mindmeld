@@ -28,6 +28,9 @@ class EvalResult(BaseModel):
     threshold: float = 1.0
 
     def update(self):
+        if len(self.metrics) == 0:
+            return
+
         self.success = True
         for metric in self.metrics:
             metric.update()
@@ -56,22 +59,23 @@ def eval_inference(
     while runs_left > 0:
         runs_left -= 1
         inference_result = run_inference(inference, input_data, runtime_config, model_name, system_prompt)
-        for metric in eval_metrics:
-            if metric.name not in eval_metric_results:
-                eval_metric_results[metric.name] = EvalMetricResult(
-                    name=metric.name,
-                    weight=metric.weight,
-                    threshold=metric.threshold
+        if inference_result.success:
+            for metric in eval_metrics:
+                if metric.name not in eval_metric_results:
+                    eval_metric_results[metric.name] = EvalMetricResult(
+                        name=metric.name,
+                        weight=metric.weight,
+                        threshold=metric.threshold
+                    )
+                    eval_result.metrics.append(eval_metric_results[metric.name])
+                eval_metric_result = eval_metric_results[metric.name]
+                metric_result = metric.func(
+                    runtime_config,
+                    inference,
+                    inference_result.system_prompt,
+                    input_data,
+                    inference_result.result
                 )
-                eval_result.metrics.append(eval_metric_results[metric.name])
-            eval_metric_result = eval_metric_results[metric.name]
-            metric_result = metric.func(
-                runtime_config,
-                inference,
-                inference_result.system_prompt,
-                input_data,
-                inference_result.result
-            )
-            eval_metric_result.scores.append(metric_result)
+                eval_metric_result.scores.append(metric_result)
     eval_result.update()
     return eval_result

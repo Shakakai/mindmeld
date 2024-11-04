@@ -32,8 +32,8 @@ def echo() -> MetricCallableType:
     ) -> float:
         input_md = pydantic_to_vs(input_data)
         output_md = pydantic_to_vs(output_data)
-        equal_values = input_md == output_md
-        return 1.0 if equal_values else 0.0
+        result = 1.0 if input_md == output_md else 0.0
+        return result
 
     __impl__.__name__ = "echo"
     return __impl__

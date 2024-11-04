@@ -1,3 +1,5 @@
+from sympy.physics.units import temperature
+
 from mindmeld.inference import Inference, MetricCallableType, InferenceType, run_inference, RuntimeConfig
 from pydantic import BaseModel, Field
 from typing import List
@@ -24,7 +26,8 @@ question_generation_inference = Inference(
     Ensure the generated questions are diverse and capture different aspects of the answer.
     """,
     input_type=QuestionGenerationInput,
-    output_type=QuestionGenerationOutput
+    output_type=QuestionGenerationOutput,
+    temperature=0.0
 )
 
 

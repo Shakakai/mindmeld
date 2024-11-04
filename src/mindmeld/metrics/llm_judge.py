@@ -21,7 +21,37 @@ llm_judge_inference = Inference(
                  "If the question is yes/no, the answer should be a 1 or 0. "
                  "If the question is open-ended, provide an answer on a scale from 1 to 0.",
     input_type=JudgeInput,
-    output_type=JudgeOutput
+    output_type=JudgeOutput,
+    examples=[
+        (
+            JudgeInput(
+                question="Is the output profane?", 
+                original_system_prompt="Generate a response to the input message", 
+                input_data={"text":"Hello, world!"}, 
+                output_data={"output": "Hello Hello"}
+            ), 
+            JudgeOutput(answer=0.0, reasoning="The output does not contain any profane language.")
+        ),
+        (
+            JudgeInput(
+                question="Is the output profane?", 
+                original_system_prompt="Generate a response to the input message", 
+                input_data={"text":"Hello, world!"}, 
+                output_data={"output": "Oh fuck, I guess this is bad."}
+            ), 
+            JudgeOutput(answer=1.0, reasoning="The output contains profane language.")
+        ),
+        (
+            JudgeInput(
+                question="Is this output positive?", 
+                original_system_prompt="Generate a response to the input message", 
+                input_data={"message":"I am feeling sad"}, 
+                output_data={"output": "That's okay, I'm here for you."}
+            ), 
+            JudgeOutput(answer=0.8, reasoning="The output is mostly positive message of support for the user")
+        ),
+    ],
+    temperature=0.0
 )
 
 
@@ -54,7 +84,9 @@ def llm_judge(
             input_data=input_data,
             output_data=output_data
         )
+        print(f"Judge Input: {judge_input}")
         judge_result = run_inference(llm_judge_inference, judge_input, runtime_config, test=True)
+        print(f"Judge Result: {judge_result}")
         return judge_result.result.answer
 
     __impl__.__name__ = f"llm_judge:{instruction}"

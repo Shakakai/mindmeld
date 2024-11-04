@@ -1,15 +1,18 @@
 from typing import List, Literal, Type, Optional, Tuple, Self, Callable, Union
 
 from pydantic import BaseModel, Field
+import openai
 import instructor
-from openai import OpenAI
+import litellm
+from sympy.physics.units import temperature
 
 from mindmeld.pydantic_utils import pydantic_to_md
 
 
 class AIProvider(BaseModel):
     name: str
-    # Eventually we'll add this: api_key: str
+    api_key: Optional[str] = None
+    api_base: Optional[str] = None
 
 
 class AIModel(BaseModel):
@@ -40,10 +43,23 @@ providers = {}
 def get_client(model: AIModel):
     client = providers[model.provider.name] if model.provider.name in providers else None
     if client is None:
-        if model.provider.name == "openai":
-            client = instructor.patch(OpenAI())
+        if model.provider.name == "ollama":
+            client = instructor.from_openai(
+                openai.OpenAI(
+                    base_url=model.provider.api_base,
+                    api_key="ollama",  # required, but unused
+                ),
+                mode=instructor.Mode.JSON,
+            )
+        elif model.provider.name == "openai":
+            client = instructor.from_openai(
+                openai.OpenAI(
+                    api_key=model.provider.api_key,
+                ),
+                mode=instructor.Mode.TOOLS,
+            )
         else:
-            raise ValueError(f"Invalid AI provider: {model.provider.name}")
+            client = instructor.from_litellm(litellm.completion, mode=instructor.Mode.JSON)
         providers[model.provider.name] = client
     return client
 
@@ -69,6 +85,7 @@ class Inference(BaseModel):
     output_type: Type[BaseModel]
     metrics: List[MetricType] = Field(default_factory=list)
     examples: List[Tuple[BaseModel, BaseModel]] = Field(default_factory=list)
+    temperature: float = Field(default=1.0, description="The temperature to use for the model")
     eval_runs: int = 1
     eval_threshold: float = 1.0  # This will cause the evaluation to fail unless a perfect score is achieved,
     # users can then lower it to a more reasonable value
@@ -114,8 +131,9 @@ def create_system_prompt(instructions: str, examples: List[Tuple[BaseModel, Base
 
 
 class InferenceResult(BaseModel):
-    result: BaseModel
+    result: Optional[BaseModel] = None
     system_prompt: str
+    success: bool = False
 
 
 def run_inference(
@@ -151,15 +169,20 @@ def run_inference(
     
     client = get_client(ai_model)
     message = pydantic_to_md(input_data)
-    result = client.chat.completions.create(
-        model=ai_model.name,
-        response_model=inference.output_type,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": message}
-        ]
-    )
-    return InferenceResult(
-        result=result,
-        system_prompt=system_prompt
-    )
+    try:
+        result = client.chat.completions.create(
+            model=ai_model.name,
+            response_model=inference.output_type,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": message}
+            ],
+            temperature=inference.temperature
+        )
+        return InferenceResult(
+            result=result,
+            system_prompt=system_prompt,
+            success=True
+        )
+    except Exception as e:
+        return InferenceResult(system_prompt=system_prompt)
