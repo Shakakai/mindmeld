@@ -32,28 +32,28 @@ birthday_message_inference = Inference(
 )
 
 
-def test_birthday_message_inference(ollama_runtime_config):
+def test_birthday_message_inference(runtime_config):
     test_person = Person(name="Alice", age=30)
 
     # Run the inference
     inference_result = run_inference(
         inference=birthday_message_inference,
         input_data=test_person,
-        runtime_config=ollama_runtime_config
+        runtime_config=runtime_config
     )
 
     # Assert the result
     assert isinstance(inference_result.result, BirthdayMessage)
 
 
-def test_birthday_message_eval(ollama_runtime_config):
+def test_birthday_message_eval(runtime_config):
     test_person = Person(name="Alice", age=30)
 
     # Run the inference
     eval_result = eval_inference(
         inference=birthday_message_inference,
         input_data=test_person,
-        runtime_config=ollama_runtime_config
+        runtime_config=runtime_config
     )
 
     # Assert the result

@@ -4,7 +4,7 @@ from mindmeld.inference import run_inference
 from .conftest import echo_inference, EchoType
 
 
-def test_run_inference(ollama_runtime_config, ollama_model_name):
+def test_run_inference(runtime_config, model_name):
     test_text= "Hello, world!"
 
     # Create test input
@@ -14,8 +14,8 @@ def test_run_inference(ollama_runtime_config, ollama_model_name):
     ir = run_inference(
         inference=echo_inference,
         input_data=echo_input,
-        runtime_config=ollama_runtime_config,
-        model_name=ollama_model_name
+        runtime_config=runtime_config,
+        model_name=model_name
     )
 
     # Assert the result

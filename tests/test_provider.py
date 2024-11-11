@@ -1,7 +1,4 @@
-import pytest
-from pydantic import BaseModel
-from mindmeld.inference import AIProvider, AIModel, RuntimeConfig, Inference, run_inference
-from mindmeld.metrics.echo import echo
+from mindmeld.inference import AIModel
 
 
 def test_ollama_runtime_config(ollama_provider, ollama_runtime_config):
@@ -17,5 +14,4 @@ def test_ollama_runtime_config(ollama_provider, ollama_runtime_config):
     assert isinstance(model, AIModel)
     assert model.provider == ollama_provider
     assert model.name == "llama3.2:1b"
-
 
