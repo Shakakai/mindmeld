@@ -1,4 +1,5 @@
-from mindmeld.inference import Inference, MetricCallableType, InferenceType, run_inference, RuntimeConfig
+from mindmeld.inference import Inference, MetricCallableType, InferenceType, run_inference, RuntimeConfig, \
+    MetricResultType
 from pydantic import BaseModel, Field
 
 
@@ -47,7 +48,7 @@ def answer_relevance() -> MetricCallableType:
         system_prompt: str,
         input_data: BaseModel,
         output_data: BaseModel
-    ) -> float:
+    ) -> MetricResultType:
         # Run the answer relevance inference
         relevance_input = AnswerRelevanceInput(
             system_prompt=system_prompt,
@@ -55,7 +56,16 @@ def answer_relevance() -> MetricCallableType:
             output_data=output_data
         )
         relevance_output = run_inference(answer_relevance_inference, relevance_input, runtime_config, test=True)
-        return relevance_output.relevance_score
+        if not relevance_output.success:
+            return MetricResultType(
+                metric_name=__impl__.__name__,
+                success=False,
+            )
+        return MetricResultType(
+            metric_name=__impl__.__name__,
+            success=True,
+            score=relevance_output.result.relevance_score
+        )
 
     __impl__.__name__ = "answer_relevance"
     return __impl__

@@ -1,4 +1,4 @@
-from mindmeld.inference import Inference, InferenceType, RuntimeConfig, run_inference, Metric
+from mindmeld.inference import Inference, InferenceType, RuntimeConfig, run_inference, Metric, MetricResultType
 
 from pydantic import BaseModel, Field
 from typing import Dict, Optional, List
@@ -6,7 +6,7 @@ from typing import Dict, Optional, List
 
 class EvalMetricResult(BaseModel):
     name: str
-    scores: List[float] = Field(default_factory=list)
+    scores: List[MetricResultType] = Field(default_factory=list)
     mean_score: float = 0.0
     max_score: Optional[float] = None
     min_score: Optional[float] = None
@@ -15,9 +15,9 @@ class EvalMetricResult(BaseModel):
     threshold: float = 0.0
 
     def update(self):
-        self.min_score = min(self.scores)
-        self.max_score = max(self.scores)
-        self.mean_score = sum(self.scores) / len(self.scores)
+        self.min_score = min(result.score for result in self.scores)
+        self.max_score = max(result.score for result in self.scores)
+        self.mean_score = sum(result.score for result in self.scores) / len(self.scores)
         self.weighted_score = self.mean_score * self.weight
 
 

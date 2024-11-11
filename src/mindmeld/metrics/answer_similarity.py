@@ -1,6 +1,7 @@
 from sympy.physics.units import temperature
 
-from mindmeld.inference import Inference, MetricCallableType, InferenceType, run_inference, RuntimeConfig
+from mindmeld.inference import Inference, MetricCallableType, InferenceType, run_inference, RuntimeConfig, \
+    MetricResultType
 from pydantic import BaseModel, Field
 from typing import List
 import numpy as np
@@ -62,20 +63,22 @@ def answer_similarity() -> MetricCallableType:
             system_prompt: str,
             input_data: BaseModel,
             output_data: BaseModel
-    ) -> float:
+    ) -> MetricResultType:
         # Generate questions from the answer
         gen_input = QuestionGenerationInput(
            answer=output_data,
            num_questions=3  # You can adjust this number
         )
         gen_output = run_inference(question_generation_inference, gen_input, runtime_config, test=True)
+        if not gen_output.success:
+            return MetricResultType(metric_name=__impl__.__name__, success=False, score=0.0)
 
         # Calculate similarities
         input_text = pydantic_to_vs(input_data)
-        similarities = [calculate_cosine_similarity(input_text, q) for q in gen_output.generated_questions]
+        similarities = [calculate_cosine_similarity(input_text, q) for q in gen_output.result.generated_questions]
         mean_similarity = np.mean(similarities)
 
-        return float(mean_similarity)
+        return MetricResultType(metric_name=__impl__.__name__, success=True, score=float(mean_similarity))
 
     __impl__.__name__ = "answer_similarity"
     return __impl__

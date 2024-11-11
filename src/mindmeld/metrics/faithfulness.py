@@ -1,4 +1,5 @@
-from mindmeld.inference import Inference, MetricCallableType, InferenceType, run_inference, RuntimeConfig
+from mindmeld.inference import Inference, MetricCallableType, InferenceType, run_inference, RuntimeConfig, \
+    MetricResultType
 from pydantic import BaseModel, Field
 from typing import List
 
@@ -42,6 +43,7 @@ statement_extraction_inference = Inference(
     temperature=0.0
 )
 
+METRIC_NAME = "faithfulness"
 
 def faithfulness() -> MetricCallableType:
     """
@@ -62,11 +64,13 @@ def faithfulness() -> MetricCallableType:
         system_prompt: str,
         input_data: BaseModel,
         output_data: BaseModel
-    ) -> float:
+    ) -> MetricResultType:
         # Step 1: Extract statements from the generated answer
         extraction_output = run_inference(statement_extraction_inference, output_data, runtime_config, test=True)
+        if not extraction_output.success:
+            return MetricResultType(metric_name=METRIC_NAME, success=False)
         
-        statements = extraction_output.statements
+        statements = extraction_output.result.statements
         
         # Step 2: Verify each statement
         faithful_statements = 0
@@ -82,15 +86,14 @@ def faithfulness() -> MetricCallableType:
                 test=True
             )
             
-            if verification_output.is_faithful:
+            if verification_output.success and verification_output.result.is_faithful:
                 faithful_statements += 1
         
         # Step 3: Calculate faithfulness score
         faithfulness_score = faithful_statements / len(statements) if len(statements) > 0 else 0.0
-        
-        return faithfulness_score
+        return MetricResultType(metric_name=METRIC_NAME, success=True, score=faithfulness_score)
 
-    __impl__.__name__ = "faithfulness"
+    __impl__.__name__ = METRIC_NAME
     return __impl__
 
 

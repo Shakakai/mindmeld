@@ -1,16 +1,14 @@
 import pytest
 
-from mindmeld.inference import Inference, RuntimeConfig, AIProvider, AIModel, run_inference
-from mindmeld.metrics.echo import echo
-from pydantic import BaseModel
-from .conftest import echo_inference, EchoInput, EchoOutput
+from mindmeld.inference import run_inference
+from .conftest import echo_inference, EchoType
 
 
 def test_run_inference(ollama_runtime_config, ollama_model_name):
     test_text= "Hello, world!"
 
     # Create test input
-    echo_input = EchoInput(text=test_text)
+    echo_input = EchoType(text=test_text)
 
     # Run the inference
     ir = run_inference(
@@ -21,6 +19,6 @@ def test_run_inference(ollama_runtime_config, ollama_model_name):
     )
 
     # Assert the result
-    assert isinstance(ir.result, EchoOutput)
-    assert ir.result.output == test_text
+    assert isinstance(ir.result, EchoType)
+    assert ir.result.text == test_text
 

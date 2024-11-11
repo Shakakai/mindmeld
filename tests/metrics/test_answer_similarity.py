@@ -1,6 +1,6 @@
 import pytest
 from mindmeld.metrics.answer_similarity import answer_similarity
-from mindmeld.inference import Inference, BaseModel
+from mindmeld.inference import Inference, BaseModel, MetricResultType
 
 
 class InputData(BaseModel):
@@ -32,12 +32,12 @@ def test_answer_similarity_various_inputs(runtime_config, model_name, inference,
     input_data = InputData(question=question)
     output_data = OutputData(answer=answer)
 
-    metric_func = answer_similarity(runtime_config, model_name)
-    result = metric_func(inference, "Answer the question accurately", input_data, output_data)
+    metric_func = answer_similarity()
+    result = metric_func(runtime_config, inference, "Answer the question accurately", input_data, output_data)
 
-    assert isinstance(result, float)
-    assert expected_range[0] <= result, f"Expected value above {expected_range[0]}, Got: {result}"
-    assert result <= expected_range[1], f"Expected value below {expected_range[1]}, Got: {result}"
+    assert isinstance(result, MetricResultType)
+    assert expected_range[0] <= result.score, f"Expected value above {expected_range[0]}, Got: {result.score}"
+    assert result.score <= expected_range[1], f"Expected value below {expected_range[1]}, Got: {result.score}"
 
 
 @pytest.mark.parametrize("question", [
@@ -49,8 +49,9 @@ def test_answer_similarity_empty_answer(runtime_config, model_name, inference, q
     input_data = InputData(question=question)
     output_data = OutputData(answer="")
 
-    metric_func = answer_similarity(runtime_config, model_name)
-    result = metric_func(inference, "Answer the question accurately", input_data, output_data)
+    metric_func = answer_similarity()
+    result = metric_func(runtime_config, inference, "Answer the question accurately", input_data, output_data)
 
-    assert result <= 0.2, f"Expected 0.2 of less for empty answer, got {result}"
+    assert isinstance(result, MetricResultType)
+    assert result.score <= 0.2, f"Expected 0.2 of less for empty answer, got {result}"
 

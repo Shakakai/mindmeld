@@ -1,4 +1,4 @@
-from mindmeld.inference import Inference, MetricCallableType, RuntimeConfig
+from mindmeld.inference import Inference, MetricCallableType, RuntimeConfig, MetricResultType
 from pydantic import BaseModel
 
 from mindmeld.pydantic_utils import pydantic_to_md, pydantic_to_vs
@@ -29,11 +29,11 @@ def echo() -> MetricCallableType:
         system_prompt: str,
         input_data: BaseModel,
         output_data: BaseModel
-    ) -> float:
+    ) -> MetricResultType:
         input_md = pydantic_to_vs(input_data)
         output_md = pydantic_to_vs(output_data)
         result = 1.0 if input_md == output_md else 0.0
-        return result
+        return MetricResultType(metric_name=__impl__.__name__, success=True, score=result)
 
     __impl__.__name__ = "echo"
     return __impl__

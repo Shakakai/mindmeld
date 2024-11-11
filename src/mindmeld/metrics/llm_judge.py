@@ -1,4 +1,5 @@
-from mindmeld.inference import Inference, MetricCallableType, InferenceType, run_inference, RuntimeConfig
+from mindmeld.inference import Inference, MetricCallableType, InferenceType, run_inference, RuntimeConfig, \
+    MetricResultType
 from pydantic import BaseModel, Field
 
 
@@ -77,7 +78,7 @@ def llm_judge(
             system_prompt: str,
             input_data: BaseModel,
             output_data: BaseModel
-    ) -> float:
+    ) -> MetricResultType:
         judge_input = JudgeInput(
             question=instruction,
             original_system_prompt=system_prompt,
@@ -86,8 +87,16 @@ def llm_judge(
         )
         print(f"Judge Input: {judge_input}")
         judge_result = run_inference(llm_judge_inference, judge_input, runtime_config, test=True)
+
+        if not judge_result.success:
+            return MetricResultType(metric_name=__impl__.__name__)
+
         print(f"Judge Result: {judge_result}")
-        return judge_result.result.answer
+        return MetricResultType(
+            metric_name=__impl__.__name__,
+            success=True,
+            score=judge_result.result.answer
+        )
 
     __impl__.__name__ = f"llm_judge:{instruction}"
     return __impl__

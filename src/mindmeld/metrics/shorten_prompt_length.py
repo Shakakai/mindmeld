@@ -1,4 +1,4 @@
-from mindmeld.inference import Inference, MetricCallableType, RuntimeConfig
+from mindmeld.inference import Inference, MetricCallableType, RuntimeConfig, MetricResultType
 from pydantic import BaseModel
 import math
 
@@ -33,9 +33,10 @@ def shorten_prompt_length(max_length=500) -> MetricCallableType:
         system_prompt: str, 
         input_data: BaseModel, 
         output_data: BaseModel
-    ) -> float:
+    ) -> MetricResultType:
         prompt_length = len(system_prompt)
-        return token_efficiency_score(prompt_length, midpoint=max_length)
+        score = token_efficiency_score(prompt_length, midpoint=max_length)
+        return MetricResultType(metric_name=__impl__.__name__, success=True, score=score)
 
     __impl__.__name__ = "shorten_prompt_length"
     return __impl__

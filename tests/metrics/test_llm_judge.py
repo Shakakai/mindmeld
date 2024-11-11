@@ -1,6 +1,8 @@
 import pytest
+from typing_extensions import runtime
+
 from mindmeld.metrics.llm_judge import llm_judge
-from mindmeld.inference import Inference, BaseModel
+from mindmeld.inference import Inference, BaseModel, MetricResultType
 
 
 class InputData(BaseModel):
@@ -31,11 +33,17 @@ def test_llm_judge_various_inputs(runtime_config, model_name, inference, input_t
     input_data = InputData(text=input_text)
     output_data = OutputData(result=output_text)
 
-    metric_func = llm_judge(runtime_config, model_name, instruction)
-    result = metric_func(inference, "Process the input text as instructed", input_data, output_data)
+    metric_func = llm_judge(instruction)
+    result = metric_func(
+        runtime_config,
+        inference,
+        "Process the input text as instructed",
+        input_data,
+        output_data
+    )
 
-    assert isinstance(result, float)
-    assert result == expected, f"Expected {expected}, but got {result}"
+    assert isinstance(result, MetricResultType)
+    assert result.score == expected, f"Expected {expected}, but got {result}"
 
 
 def test_llm_judge_empty_output(runtime_config, model_name, inference):
@@ -43,10 +51,11 @@ def test_llm_judge_empty_output(runtime_config, model_name, inference):
     output_data = OutputData(result="")
     instruction = "Is the output empty?"
 
-    metric_func = llm_judge(runtime_config, model_name, instruction)
-    result = metric_func(inference, "Process the input text", input_data, output_data)
+    metric_func = llm_judge(instruction)
+    result = metric_func(runtime_config, inference, "Process the input text", input_data, output_data)
 
-    assert result == 1.0, f"Expected 1.0 for empty output, got {result}"
+    assert isinstance(result, MetricResultType)
+    assert result.score == 1.0, f"Expected 1.0 for empty output, got {result}"
 
 
 def test_llm_judge_identical_input_output(runtime_config, model_name, inference):
@@ -55,10 +64,11 @@ def test_llm_judge_identical_input_output(runtime_config, model_name, inference)
     output_data = OutputData(result=text)
     instruction = "Is the output identical to the input?"
 
-    metric_func = llm_judge(runtime_config, model_name, instruction)
-    result = metric_func(inference, "Process the input text", input_data, output_data)
+    metric_func = llm_judge(instruction)
+    result = metric_func(runtime_config, inference, "Process the input text", input_data, output_data)
 
-    assert result == 1.0, f"Expected 1.0 for identical input and output, got {result}"
+    assert isinstance(result, MetricResultType)
+    assert result.score == 1.0, f"Expected 1.0 for identical input and output, got {result}"
 
 
 def test_llm_judge_complex_instruction(runtime_config, model_name, inference):
@@ -67,6 +77,7 @@ def test_llm_judge_complex_instruction(runtime_config, model_name, inference):
     instruction = "Does the output contain information not present in the input while still being relevant to the input?"
 
     metric_func = llm_judge(instruction)
-    result = metric_func(inference, "Expand on the input text with relevant information", input_data, output_data)
+    result = metric_func(runtime_config, inference, "Expand on the input text with relevant information", input_data, output_data)
 
-    assert result == 1.0, f"Expected 1.0 for output with additional relevant information, got {result}"
+    assert isinstance(result, MetricResultType)
+    assert result.score == 1.0, f"Expected 1.0 for output with additional relevant information, got {result}"

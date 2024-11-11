@@ -1,6 +1,6 @@
 import pytest
 from mindmeld.metrics.answer_relevance import answer_relevance
-from mindmeld.inference import Inference, BaseModel
+from mindmeld.inference import Inference, BaseModel, MetricResultType
 
 
 class InputData(BaseModel):
@@ -34,10 +34,10 @@ def test_answer_relevance_various_inputs(runtime_config, model_name, inference, 
     input_data = InputData(question=question)
     output_data = OutputData(answer=answer)
 
-    metric_func = answer_relevance(runtime_config, model_name)
-    result = metric_func(inference, "Answer the question accurately", input_data, output_data)
+    metric_func = answer_relevance()
+    result = metric_func(runtime_config, inference, "Answer the question accurately", input_data, output_data)
 
-    assert isinstance(result, float)
-    assert expected_range[0] <= result, f"Result should be larger than {expected_range[0]}"
-    assert result <= expected_range[1], f"Result should be smaller then {expected_range[1]}"
+    assert isinstance(result, MetricResultType)
+    assert expected_range[0] <= result.score, f"Result should be larger than {expected_range[0]}"
+    assert result.score <= expected_range[1], f"Result should be smaller then {expected_range[1]}"
 

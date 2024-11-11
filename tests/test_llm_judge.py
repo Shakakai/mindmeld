@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from mindmeld.inference import Inference, run_inference, eval_inference
+from mindmeld.inference import Inference, run_inference
+from mindmeld.eval import eval_inference
 from mindmeld.metrics.llm_judge import llm_judge
 
 
@@ -15,7 +16,7 @@ class BirthdayMessage(BaseModel):
 birthday_message_inference = Inference(
     id="birthday_message",
     version=1,
-    instructions="Generate a birthday message",
+    instructions="Generate a birthday message for this person.",
     input_type=Person,
     output_type=BirthdayMessage,
     metrics=[

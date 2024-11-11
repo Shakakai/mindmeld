@@ -1,3 +1,4 @@
+from logging import exception
 from typing import List, Literal, Type, Optional, Tuple, Self, Callable, Union
 
 from pydantic import BaseModel, Field
@@ -104,6 +105,11 @@ class Inference(BaseModel):
             result.append(metric)
         return result
 
+class MetricResultType(BaseModel):
+    metric_name: str
+    success: bool = False
+    score: float = 0.0
+
 
 MetricCallableType = Callable[
     [
@@ -113,7 +119,7 @@ MetricCallableType = Callable[
         BaseModel,  # Input data
         BaseModel  # Output data
     ],
-    float
+    MetricResultType
 ]
 InferenceType = BaseModel | List[BaseModel]
 
@@ -134,6 +140,7 @@ class InferenceResult(BaseModel):
     result: Optional[BaseModel] = None
     system_prompt: str
     success: bool = False
+    exception: Optional[str] = None
 
 
 def run_inference(
@@ -185,4 +192,4 @@ def run_inference(
             success=True
         )
     except Exception as e:
-        return InferenceResult(system_prompt=system_prompt)
+        return InferenceResult(system_prompt=system_prompt, exception=str(e))
