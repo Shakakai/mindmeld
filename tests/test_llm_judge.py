@@ -23,6 +23,7 @@ birthday_message_inference = Inference(
         llm_judge("Does this message sound like a birthday message?"),
         llm_judge("Is this message positive?")
     ],
+    eval_threshold=0.8,
     examples=[
         (Person(name="Alice", age=30), BirthdayMessage(message="Happy 30th birthday, Alice!")),
         (Person(name="Bob", age=40), BirthdayMessage(message="Happy 40th birthday, Bob!")),

@@ -28,7 +28,7 @@ distribution = true
 
 [tool.pdm.version]
 source = "file"
-path = "mindmeld/__init__.py"
+path = "src/mindmeld/__init__.py"
 
 [tool.pdm.dev-dependencies]
 dev = [
