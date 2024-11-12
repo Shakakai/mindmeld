@@ -1,7 +1,6 @@
 from mindmeld.inference import Inference, MetricCallableType, RuntimeConfig, MetricResultType
 from pydantic import BaseModel
-
-from mindmeld.pydantic_utils import pydantic_to_md, pydantic_to_vs
+from mindmeld.pydantic_utils import pydantic_to_vs
 
 
 def echo() -> MetricCallableType:

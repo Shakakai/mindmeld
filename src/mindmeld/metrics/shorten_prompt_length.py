@@ -29,9 +29,9 @@ def shorten_prompt_length(max_length=500) -> MetricCallableType:
     """
     def __impl__(
         runtime_config: RuntimeConfig,
-        inference: Inference, 
-        system_prompt: str, 
-        input_data: BaseModel, 
+        inference: Inference,
+        system_prompt: str,
+        input_data: BaseModel,
         output_data: BaseModel
     ) -> MetricResultType:
         prompt_length = len(system_prompt)

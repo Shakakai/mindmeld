@@ -1,12 +1,12 @@
-from sympy.physics.units import temperature
-
-from mindmeld.inference import Inference, MetricCallableType, InferenceType, run_inference, RuntimeConfig, \
+from mindmeld.inference import (
+    Inference, MetricCallableType,
+    run_inference, RuntimeConfig,
     MetricResultType
+)
 from pydantic import BaseModel, Field
 from typing import List
 import numpy as np
 from sentence_transformers import SentenceTransformer
-
 from mindmeld.pydantic_utils import pydantic_to_vs
 
 
@@ -82,4 +82,3 @@ def answer_similarity() -> MetricCallableType:
 
     __impl__.__name__ = "answer_similarity"
     return __impl__
-

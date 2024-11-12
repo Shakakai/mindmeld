@@ -1,5 +1,4 @@
-import importlib
-from typing import List, Literal, Type, Optional, Tuple
+from typing import List, Type, Optional, Tuple
 from pydantic import BaseModel
 import instructor
 from openai import OpenAI
@@ -40,17 +39,18 @@ class Metric:
         self.weight = weight
         self.result = None
         self.error = None
-    
+
     def evaluate(
-        self, 
+        self,
         inference: "Inference",
-        input: BaseModel, 
+        input: BaseModel,
         output: BaseModel
     ):
         pass
 
 
 providers = {}
+
 
 def get_client(model: AIModel):
     client = providers[model.provider.name] if model.provider.name in providers else None
@@ -75,10 +75,11 @@ class Inference(BaseModel):
 
 InferenceType = BaseModel | List[BaseModel]
 
+
 def run_inference(
-    inference: Inference, 
-    input_data: InferenceType, 
-    runtime_config: RuntimeConfig, 
+    inference: Inference,
+    input_data: InferenceType,
+    runtime_config: RuntimeConfig,
     model_name: str = None,
     system_prompt: Optional[str] = None
 ):
@@ -88,10 +89,8 @@ def run_inference(
             system_prompt += "\n\n#Examples\n"
             for example in inference.examples:
                 system_prompt += f"\n\n##Example\n ###Input\n{example[0]}\n ###Output\n{example[1]}"
-    
     if not isinstance(input_data, inference.input_type):
         raise ValueError(f"Invalid input type: {type(input)}")
-    
     ai_model = None
     for model in runtime_config.models:
         if model.name == model_name:
@@ -99,7 +98,6 @@ def run_inference(
             break
     if ai_model is None:
         raise Exception(f"Invalid model name: {model_name}")
-    
     client = get_client(ai_model)
     message = pydantic_to_md(input_data)
     return client.chat.completions.create(
@@ -111,17 +109,17 @@ def run_inference(
         ]
     )
 
+
 """ Need to finish this.
 def main(
-    runtime_config: RuntimeConfig, 
-    module_or_inference_reference: str, 
+    runtime_config: RuntimeConfig,
+    module_or_inference_reference: str,
     mode: Literal["test", "optimize", "serve"],
     inference_config: Optional[InferenceConfig] = None
 ):
     import_path = module_or_inference_reference.split(".")
     py_module_path = ".".join(import_path[:-1])
     py_module = importlib.import_module(py_module_path)
-
     module_or_inference = getattr(py_module, import_path[-1])
     inference_list = []
     if isinstance(module_or_inference, Inference):
@@ -130,8 +128,6 @@ def main(
         inference_list += module_or_inference.get_inference_list()
     else:
         raise ValueError(f"Invalid module or inference reference: {module_or_inference}")
-
     for inference in inference_list:
         inference_function(model)
-
 """

@@ -1,7 +1,6 @@
-from mindmeld.inference import Inference, InferenceType, RuntimeConfig, run_inference, Metric, MetricResultType
-
+from mindmeld.inference import Inference, InferenceType, RuntimeConfig, run_inference, MetricResultType
 from pydantic import BaseModel, Field
-from typing import Dict, Optional, List
+from typing import Optional, List
 
 
 class EvalMetricResult(BaseModel):
@@ -46,11 +45,11 @@ class EvalResult(BaseModel):
 
 
 def eval_inference(
-    inference: Inference, 
-    input_data: InferenceType, 
-    runtime_config: RuntimeConfig, 
-    model_name: str = None,
-    system_prompt: Optional[str] = None
+        inference: Inference,
+        input_data: InferenceType,
+        runtime_config: RuntimeConfig,
+        model_name: str = None,
+        system_prompt: Optional[str] = None
 ) -> EvalResult:
     runs_left = inference.eval_runs
     eval_metrics = inference.standardized_metrics

@@ -1,5 +1,8 @@
-from mindmeld.inference import Inference, MetricCallableType, InferenceType, run_inference, RuntimeConfig, \
-    MetricResultType
+from mindmeld.inference import (
+    Inference, MetricCallableType,
+    InferenceType, run_inference,
+    RuntimeConfig, MetricResultType
+)
 from pydantic import BaseModel, Field
 
 
@@ -26,29 +29,29 @@ llm_judge_inference = Inference(
     examples=[
         (
             JudgeInput(
-                question="Is the output profane?", 
-                original_system_prompt="Generate a response to the input message", 
-                input_data={"text":"Hello, world!"}, 
+                question="Is the output profane?",
+                original_system_prompt="Generate a response to the input message",
+                input_data={"text": "Hello, world!"},
                 output_data={"output": "Hello Hello"}
-            ), 
+            ),
             JudgeOutput(answer=0.0, reasoning="The output does not contain any profane language.")
         ),
         (
             JudgeInput(
-                question="Is the output profane?", 
-                original_system_prompt="Generate a response to the input message", 
-                input_data={"text":"Hello, world!"}, 
+                question="Is the output profane?",
+                original_system_prompt="Generate a response to the input message",
+                input_data={"text": "Hello, world!"},
                 output_data={"output": "Oh fuck, I guess this is bad."}
-            ), 
+            ),
             JudgeOutput(answer=1.0, reasoning="The output contains profane language.")
         ),
         (
             JudgeInput(
-                question="Is this output positive?", 
-                original_system_prompt="Generate a response to the input message", 
-                input_data={"message":"I am feeling sad"}, 
+                question="Is this output positive?",
+                original_system_prompt="Generate a response to the input message",
+                input_data={"message": "I am feeling sad"},
                 output_data={"output": "That's okay, I'm here for you."}
-            ), 
+            ),
             JudgeOutput(answer=0.8, reasoning="The output is mostly positive message of support for the user")
         ),
     ],

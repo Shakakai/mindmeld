@@ -1,3 +1,8 @@
+from typing import List
+from pydantic import BaseModel, Field
+from mindmeld.eval import EvalResult
+from mindmeld.inference import Inference
+
 
 class PromptGeneration(BaseModel):
     instructions: str = Field(..., description="The instructions for the prompt")
@@ -6,7 +11,7 @@ class PromptGeneration(BaseModel):
 
 class PromptGenerationResult(BaseModel):
     instructions: str = Field(..., description="The instructions for the prompt")
-    test_result: TestResult = Field(..., description="The scores from testing this prompt")
+    test_result: EvalResult = Field(..., description="The scores from testing this prompt")
 
 
 class PromptGenerationHistory(BaseModel):
@@ -24,17 +29,18 @@ prompt_optimization_inference = Inference(
 )
 
 
+""" Removing for now. Will add back later
 def optimize_inference(
-    inference: Inference, 
-    input_data: List[InferenceType], 
-    runtime_config: RuntimeConfig, 
+    inference: Inference,
+    input_data: List[InferenceType],
+    runtime_config: RuntimeConfig,
     test_model_name: str,
     inference_model_name: str,
     max_iterations: int = 10
 ) -> PromptGenerationHistory:
-    result = test_inference(
-        inference, 
-        input_data, 
+    result = eval_inference(
+        inference,
+        input_data,
         runtime_config,
         inference_model_name
     )
@@ -42,7 +48,6 @@ def optimize_inference(
         instructions=inference.instructions,
         test_result=result
     )
-    
     iteration_index = 0
     history = PromptGenerationHistory(
         iteration_index=iteration_index,
@@ -52,46 +57,41 @@ def optimize_inference(
     while iteration_index < max_iterations:
         test_results = []
         prompt_gen = run_inference(
-            prompt_optimization_inference, 
-            history, 
-            runtime_config, 
+            prompt_optimization_inference,
+            history,
+            runtime_config,
             test_model_name
         )
         for i in input_data:
-            test_result = test_inference(
-                inference, 
-                i, 
-                runtime_config, 
-                inference_model_name, 
+            test_result = eval_inference(
+                inference,
+                i,
+                runtime_config,
+                inference_model_name,
                 prompt_gen.instructions
             )
             test_results.append(test_result)
-        
         avg_test_results = {}
         for test_result in test_results:
             for metric_name, metric_value in test_result.metrics.items():
                 if metric_name not in avg_test_results:
                     avg_test_results[metric_name] = []
                 avg_test_results[metric_name].append(metric_value)
-        
         for metric_name, metric_values in avg_test_results.items():
             avg_test_results[metric_name] = sum(metric_values) / len(metric_values)
-
         score = 0.0
         max_score = 0.0
         for metric_name, metric_values in avg_test_results.items():
             score += metric_values * inference.metrics[metric_name].weight
             max_score += inference.metrics[metric_name].weight
-        
         score /= max_score
-
         history.prompt_history.append(PromptGenerationResult(
             instructions=prompt_gen.instructions,
-            test_result=TestResult(
+            test_result=EvalResult(
                 score=score,
                 metrics=avg_test_results
             )
         ))
         iteration_index += 1
-    
     return history
+"""

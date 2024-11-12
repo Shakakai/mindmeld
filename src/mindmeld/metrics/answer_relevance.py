@@ -1,5 +1,8 @@
-from mindmeld.inference import Inference, MetricCallableType, InferenceType, run_inference, RuntimeConfig, \
+from mindmeld.inference import (
+    Inference, MetricCallableType,
+    run_inference, RuntimeConfig,
     MetricResultType
+)
 from pydantic import BaseModel, Field
 
 
@@ -41,7 +44,7 @@ def answer_relevance() -> MetricCallableType:
         Callable: A function that takes an Inference, system prompt, input data,
                   and output data, and returns a float score between 0 and 1.
     """
-    
+
     def __impl__(
         runtime_config: RuntimeConfig,
         inference: Inference,
@@ -69,4 +72,3 @@ def answer_relevance() -> MetricCallableType:
 
     __impl__.__name__ = "answer_relevance"
     return __impl__
-

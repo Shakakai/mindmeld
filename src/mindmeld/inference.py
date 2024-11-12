@@ -1,12 +1,8 @@
-from logging import exception
-from typing import List, Literal, Type, Optional, Tuple, Self, Callable, Union
-
+from typing import List, Type, Optional, Tuple, Callable, Union
 from pydantic import BaseModel, Field
 import openai
 import instructor
 import litellm
-from sympy.physics.units import temperature
-
 from mindmeld.pydantic_utils import pydantic_to_md
 
 
@@ -105,6 +101,7 @@ class Inference(BaseModel):
             result.append(metric)
         return result
 
+
 class MetricResultType(BaseModel):
     metric_name: str
     success: bool = False
@@ -144,9 +141,9 @@ class InferenceResult(BaseModel):
 
 
 def run_inference(
-    inference: Inference, 
-    input_data: InferenceType, 
-    runtime_config: RuntimeConfig, 
+    inference: Inference,
+    input_data: InferenceType,
+    runtime_config: RuntimeConfig,
     model_name: str = None,
     system_prompt: Optional[str] = None,
     test: bool = False
@@ -158,10 +155,8 @@ def run_inference(
     # create a system prompt if not provided
     if system_prompt is None:
         system_prompt = create_system_prompt(inference.instructions, inference.examples)
-    
     if model_name is None:
         model_name = runtime_config.eval_model if test else runtime_config.default_model
-
     if model_name is None:
         raise ValueError("Model name is required or a default model must be set in the runtime config")
 
@@ -173,7 +168,7 @@ def run_inference(
 
     if ai_model is None:
         raise Exception(f"Invalid model name: {model_name}")
-    
+
     client = get_client(ai_model)
     message = pydantic_to_md(input_data)
     try:
