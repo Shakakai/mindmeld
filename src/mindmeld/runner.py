@@ -111,7 +111,7 @@ def run_inference(
         ]
     )
 
-
+""" Need to finish this.
 def main(
     runtime_config: RuntimeConfig, 
     module_or_inference_reference: str, 
@@ -133,3 +133,5 @@ def main(
 
     for inference in inference_list:
         inference_function(model)
+
+"""
