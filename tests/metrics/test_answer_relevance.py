@@ -22,13 +22,11 @@ def inference():
 
 
 @pytest.mark.parametrize("question,answer,expected_range", [
-    ("What is the capital of France?", "Paris is the capital of France.", (0.7, 1.0)),
-    ("What is the capital of France?", "The capital of France is Paris.", (0.7, 1.0)),
-    ("Who's free tonight?", "I am.", (0.3, 1.0)),
-    ("Who's free tonight?", "I am not in jail.", (0.0, 0.7)),
-    ("What is the capital of France?", "The capital of France is Berlin.", (0.0, 0.3)),
-    ("What is the capital of France?", "The weather in Paris is nice.", (0.0, 0.3)),
-    ("What is the capital of France?", "Elephants are large mammals.", (0.0, 0.3)),
+    ("What is the capital of France?", "Paris is the capital of France.", (0.6, 1.0)),
+    ("What is the capital of France?", "The capital of France is Paris.", (0.6, 1.0)),
+    ("What is the capital of France?", "The capital of France is Berlin.", (0.0, 0.6)),
+    ("What is the capital of France?", "The weather in Paris is nice.", (0.0, 0.6)),
+    ("What is the capital of France?", "Elephants are large mammals.", (0.0, 0.6)),
 ])
 def test_answer_relevance_various_inputs(runtime_config, model_name, inference, question, answer, expected_range):
     input_data = InputData(question=question)

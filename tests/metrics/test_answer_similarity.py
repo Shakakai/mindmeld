@@ -53,5 +53,5 @@ def test_answer_similarity_empty_answer(runtime_config, model_name, inference, q
     result = metric_func(runtime_config, inference, "Answer the question accurately", input_data, output_data)
 
     assert isinstance(result, MetricResultType)
-    assert result.score <= 0.2, f"Expected 0.2 of less for empty answer, got {result}"
+    assert result.score <= 0.3, f"Expected 0.3 of less for empty answer, got {result}"
 

@@ -1,0 +1,20 @@
+{
+  "models": [
+    {
+      "provider": {
+        "name": "openai",
+        "api_key": null,
+        "api_key_env_var": null,
+        "api_base": null
+      },
+      "name": "gpt-4o"
+    }
+  ],
+  "eval_model": "gpt-4o",
+  "default_model": "gpt-4o",
+  "root_module": "no_clash_project",
+  "project_root": ".",
+  "dataset_dir": "datasets",
+  "inference_config_dir": "inference_configs",
+  "python_sources": ["src"]
+}

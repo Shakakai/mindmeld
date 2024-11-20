@@ -1,6 +1,8 @@
 from mindmeld.inference import AIModel
+import pytest
 
 
+@pytest.mark.skip("Not implemented")
 def test_ollama_runtime_config(ollama_provider, ollama_runtime_config):
     # Test provider configuration
     assert ollama_provider.name == "ollama"

@@ -1,12 +1,11 @@
+from pathlib import Path
+
 import pytest
 from pydantic import BaseModel
 
-from mindmeld.inference import RuntimeConfig, AIModel, AIProvider, Inference
+from mindmeld.inference import RuntimeConfig, AIModel, AIProvider, Inference, DataEntry, Dataset
 from mindmeld.metrics.echo import echo
-#import logging
-
-
-#logging.basicConfig(level=logging.DEBUG)
+import sys
 
 
 @pytest.fixture
@@ -16,7 +15,7 @@ def model_name():
 
 @pytest.fixture
 def runtime_config(model_name):
-    return RuntimeConfig(
+    rtc = RuntimeConfig(
         models=[
             AIModel(
                 provider=AIProvider(name="openai"),
@@ -24,8 +23,15 @@ def runtime_config(model_name):
             )
         ],
         eval_model=model_name,
-        default_model=model_name
+        default_model=model_name,
+        root_module="mindmeld", # dir(sys.modules[__name__])
+        project_root="./",
+        dataset_dir="datasets",
+        inference_config_dir="inference_configs"
     )
+    rtc.resolve_paths(Path.cwd())
+    return rtc
+
 
 @pytest.fixture
 def ollama_model_name():
@@ -54,7 +60,10 @@ def ollama_runtime_config(ollama_provider, ollama_model_name, model_name):
             )
         ],
         eval_model=model_name,
-        default_model=ollama_model_name
+        default_model=ollama_model_name,
+        project_root="",
+        dataset_dir="datasets",
+        inference_config_dir="inference_configs"
     )
 
 
@@ -69,10 +78,16 @@ echo_inference = Inference(
     input_type=EchoType,
     output_type=EchoType,
     metrics=[echo(),],
-    examples=[
-        (EchoType(text="Hello, world!"), EchoType(text="Hello, world!")),
-        (EchoType(text="How are you?"), EchoType(text="How are you?")),
-    ],
+    examples=Dataset(entries=[
+        DataEntry(
+            input=EchoType(text="Hello, world!"),
+            expected=EchoType(text="Hello, world!")
+        ),
+        DataEntry(
+            input=EchoType(text="How are you?"),
+            expected=EchoType(text="How are you?")
+        ),
+    ]),
     eval_runs=10,
     threshold=0.7,
     temperature=0.0

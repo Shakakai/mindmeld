@@ -1,7 +1,7 @@
 from mindmeld.inference import (
     Inference, MetricCallableType,
     run_inference, RuntimeConfig,
-    MetricResultType
+    MetricResultType, DataEntry, Dataset
 )
 from pydantic import BaseModel, Field
 
@@ -28,7 +28,34 @@ answer_relevance_inference = Inference(
     """,
     input_type=AnswerRelevanceInput,
     output_type=AnswerRelevanceOutput,
-    temperature=0.0
+    temperature=0.0,
+    examples=Dataset(entries=[
+        DataEntry(
+            input=AnswerRelevanceInput(
+                system_prompt="Answer the question based on the data provided in the input",
+                input_data={"text": "# Context: The capital of France is Paris. "
+                                    "\n\n# Question: What is the capital of France?"},
+                output_data={"answer": "The capital of France is Paris."}
+            ),
+            expected=AnswerRelevanceOutput(
+                relevance_score=1.0,
+                reasoning="The output is a direct answer to the question based on the context provided in the input."
+            )
+        ),
+        DataEntry(
+            input=AnswerRelevanceInput(
+                system_prompt="Answer the question based on the data provided in the input",
+                input_data={ "text": "# Context: The capital of France is Paris. "
+                                     "\n\n# Question: What is the capital of France?"},
+                output_data={"answer": "The capital of France is London."}
+            ),
+            expected=AnswerRelevanceOutput(
+                relevance_score=0.0,
+                reasoning="The output is a direct answer to the question, "
+                          "but it is incorrect based on the context provided."
+            )
+        )
+    ])
 )
 
 

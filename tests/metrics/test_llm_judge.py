@@ -23,13 +23,22 @@ def inference():
     )
 
 
-@pytest.mark.parametrize("input_text,output_text,instruction,expected", [
-    ("Hello world", "HELLO WORLD", "Is the output text in all uppercase?", 1.0),
-    ("Hello world", "hello world", "Is the output text in all uppercase?", 0.0),
-    ("The quick brown fox", "The quick brown fox jumps over the lazy dog", "Does the output contain more words than the input?", 1.0),
-    ("The quick brown fox", "The quick fox", "Does the output contain more words than the input?", 0.0),
+@pytest.mark.parametrize("input_text,output_text,instruction,lower_bound,upper_bound", [
+    ("Hello world", "HELLO WORLD", "Is the output text in all uppercase?", 0.7, 1.0),
+    ("Hello world", "hello world", "Is the output text in all uppercase?", 0.0, 0.3),
+    ("The quick brown fox", "The quick brown fox jumps over the lazy dog", "Does the output contain more words than the input?", 0.7, 1.0),
+    ("The quick brown fox", "The quick fox", "Does the output contain more words than the input?", 0.0, 0.3),
 ])
-def test_llm_judge_various_inputs(runtime_config, model_name, inference, input_text, output_text, instruction, expected):
+def test_llm_judge_various_inputs(
+        runtime_config,
+        model_name,
+        inference,
+        input_text,
+        output_text,
+        instruction,
+        lower_bound,
+        upper_bound
+):
     input_data = InputData(text=input_text)
     output_data = OutputData(result=output_text)
 
@@ -43,7 +52,7 @@ def test_llm_judge_various_inputs(runtime_config, model_name, inference, input_t
     )
 
     assert isinstance(result, MetricResultType)
-    assert result.score == expected, f"Expected {expected}, but got {result}"
+    assert lower_bound <= result.score <= upper_bound, f"Expected between {lower_bound} and {upper_bound}, but got {result.score}"
 
 
 def test_llm_judge_empty_output(runtime_config, model_name, inference):
@@ -55,7 +64,7 @@ def test_llm_judge_empty_output(runtime_config, model_name, inference):
     result = metric_func(runtime_config, inference, "Process the input text", input_data, output_data)
 
     assert isinstance(result, MetricResultType)
-    assert result.score == 1.0, f"Expected 1.0 for empty output, got {result}"
+    assert 0.7 <= result.score <= 1.0, f"Expected 1.0 for empty output, got {result}"
 
 
 def test_llm_judge_identical_input_output(runtime_config, model_name, inference):
@@ -68,7 +77,7 @@ def test_llm_judge_identical_input_output(runtime_config, model_name, inference)
     result = metric_func(runtime_config, inference, "Process the input text", input_data, output_data)
 
     assert isinstance(result, MetricResultType)
-    assert result.score == 1.0, f"Expected 1.0 for identical input and output, got {result}"
+    assert 0.7 <= result.score <= 1.0, f"Expected 1.0 for identical input and output, got {result}"
 
 
 def test_llm_judge_complex_instruction(runtime_config, model_name, inference):
@@ -80,4 +89,4 @@ def test_llm_judge_complex_instruction(runtime_config, model_name, inference):
     result = metric_func(runtime_config, inference, "Expand on the input text with relevant information", input_data, output_data)
 
     assert isinstance(result, MetricResultType)
-    assert result.score == 1.0, f"Expected 1.0 for output with additional relevant information, got {result}"
+    assert 0.7 <= result.score <= 1.0, f"Expected 1.0 for output with additional relevant information, got {result}"

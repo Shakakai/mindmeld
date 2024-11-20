@@ -1,4 +1,5 @@
-from mindmeld.inference import Inference, InferenceType, RuntimeConfig, run_inference, MetricResultType
+from mindmeld.inference import Inference, InferenceType, RuntimeConfig, run_inference, MetricResultType, \
+    InferenceConfig, Dataset
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
@@ -44,16 +45,37 @@ class EvalResult(BaseModel):
             self.success = False
 
 
+def eval_dataset_inference(
+    inference: Inference,
+    dataset: Dataset,
+    runtime_config: RuntimeConfig,
+    model_name: str = None,
+    system_prompt: Optional[str] = None
+):
+    eval_result = None
+    for entry in dataset:
+        eval_result = eval_inference(
+            inference,
+            entry.input,
+            runtime_config,
+            model_name,
+            system_prompt
+        )
+    return eval_result
+
+
 def eval_inference(
         inference: Inference,
         input_data: InferenceType,
         runtime_config: RuntimeConfig,
         model_name: str = None,
-        system_prompt: Optional[str] = None
+        system_prompt: Optional[str] = None,
+        eval_result: Optional[EvalResult] = None
 ) -> EvalResult:
-    runs_left = inference.eval_runs
+    runs_left = inference.get_eval_runs(runtime_config)
     eval_metrics = inference.standardized_metrics
-    eval_result = EvalResult(threshold=inference.eval_threshold)
+    if eval_result is None:
+        eval_result = EvalResult(threshold=inference.get_eval_threshold(runtime_config))
     eval_metric_results = {}
     while runs_left > 0:
         runs_left -= 1

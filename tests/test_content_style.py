@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List
 
 from mindmeld.eval import eval_inference
-from mindmeld.inference import Inference, run_inference
+from mindmeld.inference import Inference, run_inference, InferenceConfig, DataEntry, Dataset
 from mindmeld.metrics.llm_judge import llm_judge
 
 
@@ -263,10 +263,10 @@ In the movies, they pretty much never use real explosives. They frequently use v
 examples = []
 for item in dataset:
     result = item.thread.pop()
-    examples.append((item, result))
+    examples.append(DataEntry(input=item, expected=result))
 
-example_set = examples[:7]
-test_set = examples[7:]
+example_set = Dataset(entries=examples[:7])
+test_set = Dataset(entries=examples[7:])
 
 
 reddit_comment_inference = Inference(
@@ -283,15 +283,17 @@ Follow the writing style from the examples.
         llm_judge("Does the output respond appropriately to the Reddit post and comment thread?"),
         llm_judge("Does the output maintain the writing style of Adam Savage?"),
     ],
-    eval_runs=10,
-    eval_threshold=0.8
+    config=InferenceConfig(
+        eval_runs=10,
+        eval_threshold=0.8
+    )
 )
 
 
 def test_inference(runtime_config):
     test_data = test_set[0]
-    input_data = test_data[0]
-    expected_output = test_data[1]
+    input_data = test_data.input
+    expected_output = test_data.expected
     result = run_inference(reddit_comment_inference, input_data, runtime_config)
 
     assert isinstance(result.result, RedditMessage)
@@ -299,8 +301,8 @@ def test_inference(runtime_config):
 
 def test_eval(runtime_config):
     test_data = test_set[0]
-    input_data = test_data[0]
-    expected_output = test_data[1]
+    input_data = test_data.input
+    expected_output = test_data.expected
     eval_result = eval_inference(
         inference=reddit_comment_inference,
         input_data=input_data,

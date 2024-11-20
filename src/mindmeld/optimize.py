@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Optional, Dict
 from pydantic import BaseModel, Field
 from mindmeld.eval import EvalResult
-from mindmeld.inference import Inference
+from mindmeld.inference import Inference, InferenceType, RuntimeConfig, run_inference, Dataset
+from mindmeld.eval import eval_inference
 
 
 class PromptGeneration(BaseModel):
@@ -9,15 +10,65 @@ class PromptGeneration(BaseModel):
     reasoning: str = Field(..., description="The reasoning for the prompt generation")
 
 
+class OptimizationResult(BaseModel):
+    eval_results: List[EvalResult] = Field(default_factory=list)
+    score: float = 0.0
+    metric_scores: Dict[str, List[float]] = Field(default_factory=dict)
+    metric_weights: Dict[str, float] = Field(default_factory=dict)
+
+    def update(self):
+        self.metric_scores = {}
+        self.metric_weights = {}
+        total_weight = 0.0
+        self.score = 0.0
+        for eval_result in self.eval_results:
+            for metric in eval_result.metrics:
+                if metric.name not in self.metric_scores:
+                    self.metric_scores[metric.name] = []
+                    self.metric_weights[metric.name] = metric.weight
+                    total_weight += metric.weight
+                self.metric_scores[metric.name].append(metric.weighted_score)
+        for metric_name, metric_values in self.metric_scores.items():
+            self.metric_scores[metric_name] = sum(metric_values) / len(metric_values)
+            self.score += self.metric_scores[metric_name] * self.metric_weights[metric_name]
+        self.score /= total_weight
+
+
 class PromptGenerationResult(BaseModel):
     instructions: str = Field(..., description="The instructions for the prompt")
-    test_result: EvalResult = Field(..., description="The scores from testing this prompt")
+    result: OptimizationResult = Field(..., description="The scores from testing this prompt")
 
 
 class PromptGenerationHistory(BaseModel):
     iteration_index: int = Field(..., description="The zero-based index of the current iteration")
     max_iterations: int = Field(..., description="The maximum number of iterations to run")
     prompt_history: List[PromptGenerationResult] = Field(..., description="The history of prompts generated and tested")
+
+    def get_best_prompt(self) -> PromptGenerationResult:
+        """
+        Returns the PromptGenerationResult with the highest evaluation score.
+        
+        Returns:
+            PromptGenerationResult: The result containing the best performing prompt and its test results
+        """
+        if not self.prompt_history:
+            raise ValueError("No prompts in history")
+        
+        return max(self.prompt_history, key=lambda x: x.result.score)
+
+    def get_improvement(self) -> float:
+        """
+        Returns the improvement in score from the first prompt to the best prompt.
+
+        Returns:
+            float: The improvement in score
+        """
+        if not self.prompt_history:
+            raise ValueError("No prompts in history")
+
+        best_prompt = self.get_best_prompt()
+        first_prompt = self.prompt_history[0]
+        return best_prompt.result.score - first_prompt.result.score
 
 
 prompt_optimization_inference = Inference(
@@ -29,24 +80,42 @@ prompt_optimization_inference = Inference(
 )
 
 
-""" Removing for now. Will add back later
+class OptimizeResult(BaseModel):
+    success: bool = False
+    best_prompt: Optional[str] = None
+    improvement: Optional[float] = None
+    history: Optional[PromptGenerationHistory] = None
+
+
 def optimize_inference(
     inference: Inference,
-    input_data: List[InferenceType],
+    dataset: Dataset,
     runtime_config: RuntimeConfig,
-    test_model_name: str,
-    inference_model_name: str,
+    inference_model_name: Optional[str] = None,
+    optimize_model_name: Optional[str] = None,
     max_iterations: int = 10
-) -> PromptGenerationHistory:
+) -> OptimizeResult:
+    if dataset is None or len(dataset) == 0:
+        raise ValueError("No input data provided")
+
+    if inference_model_name is None:
+        inference_model_name = runtime_config.default_model
+    
+    if optimize_model_name is None:
+        optimize_model_name = runtime_config.eval_model or runtime_config.default_model
+    
     result = eval_inference(
         inference,
-        input_data,
+        dataset[0].input,
         runtime_config,
         inference_model_name
     )
+    first_optimization_result = OptimizationResult()
+    first_optimization_result.eval_results.append(result)
+    first_optimization_result.update()
     initial_prompt_generation_result = PromptGenerationResult(
         instructions=inference.instructions,
-        test_result=result
+        result=first_optimization_result
     )
     iteration_index = 0
     history = PromptGenerationHistory(
@@ -55,43 +124,34 @@ def optimize_inference(
         prompt_history=[initial_prompt_generation_result]
     )
     while iteration_index < max_iterations:
-        test_results = []
+        optimization_result = OptimizationResult()
         prompt_gen = run_inference(
             prompt_optimization_inference,
             history,
             runtime_config,
-            test_model_name
+            optimize_model_name
         )
-        for i in input_data:
+        for item in dataset:
             test_result = eval_inference(
                 inference,
-                i,
+                item.input,
                 runtime_config,
                 inference_model_name,
-                prompt_gen.instructions
+                system_prompt=prompt_gen.result.instructions
             )
-            test_results.append(test_result)
-        avg_test_results = {}
-        for test_result in test_results:
-            for metric_name, metric_value in test_result.metrics.items():
-                if metric_name not in avg_test_results:
-                    avg_test_results[metric_name] = []
-                avg_test_results[metric_name].append(metric_value)
-        for metric_name, metric_values in avg_test_results.items():
-            avg_test_results[metric_name] = sum(metric_values) / len(metric_values)
-        score = 0.0
-        max_score = 0.0
-        for metric_name, metric_values in avg_test_results.items():
-            score += metric_values * inference.metrics[metric_name].weight
-            max_score += inference.metrics[metric_name].weight
-        score /= max_score
+            optimization_result.eval_results.append(test_result)
+        optimization_result.update()
         history.prompt_history.append(PromptGenerationResult(
-            instructions=prompt_gen.instructions,
-            test_result=EvalResult(
-                score=score,
-                metrics=avg_test_results
-            )
+            instructions=prompt_gen.result.instructions,
+            result=optimization_result
         ))
+        if optimization_result.score == 1.0:
+            break
         iteration_index += 1
-    return history
-"""
+
+    return OptimizeResult(
+        success=True,
+        best_prompt=history.get_best_prompt().instructions,
+        improvement=history.get_improvement(),
+        history=history
+    )

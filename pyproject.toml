@@ -19,6 +19,9 @@ license = {text = "MIT"}
 
 dynamic = ["version"]
 
+[project.scripts]
+mindmeld = "mindmeld.runner:cli"
+
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
